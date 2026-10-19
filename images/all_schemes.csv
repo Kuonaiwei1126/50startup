@@ -1,0 +1,21 @@
+Scheme,Number of Features,Selected Features,MSE,RMSE,R-squared
+Forward Selection,1,['R&D Spend'],68473440.71905932,8274.86801822599,0.9464587607787219
+Forward Selection,2,"['R&D Spend', 'Marketing Spend']",67220275.3756812,8198.797190788488,0.9474386447268488
+Forward Selection,3,"['R&D Spend', 'Marketing Spend', 'State_New York']",69040472.82366134,8309.05968348172,0.9460153830071389
+Forward Selection,4,"['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida']",70726699.14462554,8409.916714488054,0.9446968769428332
+Forward Selection,5,"['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida', 'Administration']",83502864.03257124,9137.99015279461,0.9347068473282473
+Backward Elimination,1,['R&D Spend'],68473440.71905932,8274.86801822599,0.9464587607787219
+Backward Elimination,2,"['R&D Spend', 'State_Florida']",67526426.12366739,8217.446447873413,0.947199257159004
+Backward Elimination,3,"['R&D Spend', 'Administration', 'State_Florida']",66775798.17615037,8171.645989404483,0.9477861934963947
+Backward Elimination,4,"['R&D Spend', 'Administration', 'State_Florida', 'State_New York']",66885723.014486566,8178.369214854913,0.9477002402858665
+Backward Elimination,5,"['R&D Spend', 'Administration', 'Marketing Spend', 'State_Florida', 'State_New York']",83502864.03257759,9137.990152794957,0.9347068473282423
+RFE,1,['R&D Spend'],68473440.71905932,8274.86801822599,0.9464587607787219
+RFE,2,"['R&D Spend', 'Marketing Spend']",67220275.3756812,8198.797190788488,0.9474386447268488
+RFE,3,"['R&D Spend', 'Administration', 'Marketing Spend']",77506468.16885428,8803.775790469354,0.9393955917820569
+RFE,4,"['R&D Spend', 'Administration', 'Marketing Spend', 'State_Florida']",82238439.22167176,9068.541184869358,0.9356955353592088
+RFE,5,"['R&D Spend', 'Administration', 'Marketing Spend', 'State_Florida', 'State_New York']",83502864.03257759,9137.990152794957,0.9347068473282423
+SelectKBest (f_regression),1,['R&D Spend'],68473440.71905932,8274.86801822599,0.9464587607787219
+SelectKBest (f_regression),2,"['R&D Spend', 'Marketing Spend']",67220275.3756812,8198.797190788488,0.9474386447268488
+SelectKBest (f_regression),3,"['R&D Spend', 'Administration', 'Marketing Spend']",77506468.16885428,8803.775790469354,0.9393955917820569
+SelectKBest (f_regression),4,"['R&D Spend', 'Administration', 'Marketing Spend', 'State_New York']",80949594.991644,8997.199285980276,0.9367033175958575
+SelectKBest (f_regression),5,"['R&D Spend', 'Administration', 'Marketing Spend', 'State_Florida', 'State_New York']",83502864.03257759,9137.990152794957,0.9347068473282423
