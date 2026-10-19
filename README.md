@@ -8,3 +8,5 @@ python mlr_50_startups.py
 ```
 
 ![RMSE and R-squared](images/rmse_r2_by_features.png)
+
+線上報告（GitHub Pages）：https://kuonaiwei1126.github.io/50startup/

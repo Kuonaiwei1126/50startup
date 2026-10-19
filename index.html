@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>50_Startups MLR 報告</title>
+<meta name="description" content="sklearn 多元線性迴歸（MLR）— Kaggle 50_Startups：CRISP-DM、Forward Selection（Top 3）、MSE / RMSE / R² 圖表">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --text: #1f2328;
+    --muted: #5b636e;
+    --border: #e2e4e8;
+    --accent: #2f6fde;
+    --accent-soft: #e8f0fd;
+    --highlight: #fff6db;
+    --code-bg: #f1f3f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121417;
+      --surface: #1a1d21;
+      --text: #e6e8eb;
+      --muted: #9aa3ad;
+      --border: #2c3036;
+      --accent: #6ea0f5;
+      --accent-soft: #1d2a40;
+      --highlight: #3a3220;
+      --code-bg: #15181c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121417;
+    --surface: #1a1d21;
+    --text: #e6e8eb;
+    --muted: #9aa3ad;
+    --border: #2c3036;
+    --accent: #6ea0f5;
+    --accent-soft: #1d2a40;
+    --highlight: #3a3220;
+    --code-bg: #15181c;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.75;
+    font-size: 16px;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 48px 16px 80px; }
+  header { margin-bottom: 40px; }
+  .eyebrow { color: var(--accent); font-weight: 500; font-size: 14px; letter-spacing: .04em; margin: 0 0 8px; }
+  h1 { font-size: clamp(26px, 5vw, 36px); line-height: 1.3; margin: 0 0 16px; }
+  h2 { font-size: 24px; margin: 56px 0 16px; padding-top: 8px; border-top: 1px solid var(--border); }
+  h3 { font-size: 18px; margin: 32px 0 12px; }
+  p, li { color: var(--text); }
+  .lead { color: var(--muted); margin: 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 12px; font-size: 13px; }
+  nav.toc { margin-top: 24px; font-size: 14px; }
+  nav.toc a { color: var(--accent); text-decoration: none; margin-right: 16px; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .stat .label { color: var(--muted); font-size: 13px; }
+  .stat .value { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 500; color: var(--muted); background: var(--code-bg); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th.num { text-align: right; }
+  tr.best td { background: var(--highlight); }
+  td strong { white-space: nowrap; }
+
+  code { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: .9em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+  pre code { background: none; padding: 0; }
+  details { margin: 16px 0; }
+  summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+
+  .formula { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 14px; white-space: nowrap; }
+  figure { margin: 24px 0; }
+  figure img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: block; }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 8px; text-align: center; }
+  footer { margin-top: 64px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Multiple Linear Regression · scikit-learn</p>
+    <h1>sklearn 多元線性迴歸（MLR）— Kaggle 50_Startups</h1>
+    <p class="lead">作業要求：1. CRISP-DM　2. Feature selection（Top 3）並 apply　3. 貼圖（MSE / RMSE / R² vs. 特徵數）</p>
+    <div class="meta">
+      <span class="chip">50 筆樣本</span>
+      <span class="chip">R&amp;D Spend · Administration · Marketing Spend · State → Profit</span>
+      <span class="chip">Python · pandas · scikit-learn · matplotlib</span>
+    </div>
+    <nav class="toc">
+      <a href="#crisp-dm">1. CRISP-DM</a>
+      <a href="#selection">2. Feature Selection</a>
+      <a href="#charts">3. 圖表</a>
+      <a href="#appendix">附錄</a>
+    </nav>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="label">Top 3 測試集 R²</div><div class="value">0.9474</div></div>
+    <div class="stat"><div class="label">Top 3 測試集 RMSE</div><div class="value">8,199.38</div></div>
+    <div class="stat"><div class="label">全部 6 特徵 RMSE</div><div class="value">9,137.99</div></div>
+    <div class="stat"><div class="label">訓練 / 測試切分</div><div class="value">80 / 20</div></div>
+  </div>
+
+  <section id="crisp-dm">
+    <h2>1. CRISP-DM</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>階段</th><th>本作業對應內容</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Business Understanding</strong></td><td>預測新創公司的 <strong>Profit</strong>，找出哪些支出項目（R&amp;D / Administration / Marketing）及所在州對獲利影響最大，作為資源配置依據。</td></tr>
+          <tr><td><strong>Data Understanding</strong></td><td>50 筆樣本、4 個自變數（3 個數值、1 個類別 State）、1 個目標 Profit。以 <code>df.describe()</code>、相關係數矩陣、散佈圖初探：R&amp;D Spend 與 Profit 相關最高。</td></tr>
+          <tr><td><strong>Data Preparation</strong></td><td>1) 檢查缺失值 2) State 做 One-Hot Encoding（<code>State_California / State_Florida / State_New York</code>）3) 切分訓練 / 測試集（80 / 20）。</td></tr>
+          <tr><td><strong>Modeling</strong></td><td><code>sklearn.linear_model.LinearRegression</code>，搭配 <strong>Forward Selection</strong> 逐步加入特徵，記錄每個特徵數下的 RMSE 與 R²。</td></tr>
+          <tr><td><strong>Evaluation</strong></td><td>以測試集 <strong>RMSE</strong>（越小越好）與 <strong>R²</strong>（越大越好）評估，畫出「特徵數 vs. RMSE / R²」曲線，選出 Top 3 特徵。</td></tr>
+          <tr><td><strong>Deployment</strong></td><td>以 Top 3 特徵重新訓練最終模型，輸出迴歸係數與預測，整理成本報告（Markdown + HTML 圖表）。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="selection">
+    <h2>2. Feature Selection（Top 3）與套用</h2>
+
+    <h3>2.1 Forward Selection 過程（測試集，random_state=0）</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="num">特徵數</th><th>Selected Features</th><th class="num">MSE</th><th class="num">RMSE</th><th class="num">R²</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">1</td><td>R&amp;D Spend</td><td class="num">68,473,440</td><td class="num">8,274.87</td><td class="num">0.9465</td></tr>
+          <tr><td class="num">2</td><td>+ Marketing Spend</td><td class="num">67,220,280</td><td class="num">8,198.80</td><td class="num">0.9474</td></tr>
+          <tr class="best"><td class="num">3</td><td>+ State_California <strong>（Top 3）</strong></td><td class="num">67,229,760</td><td class="num">8,199.38</td><td class="num">0.9474</td></tr>
+          <tr><td class="num">4</td><td>+ State_New York</td><td class="num">70,726,700</td><td class="num">8,409.92</td><td class="num">0.9447</td></tr>
+          <tr><td class="num">5</td><td>+ State_Florida</td><td class="num">70,726,700</td><td class="num">8,409.92</td><td class="num">0.9447</td></tr>
+          <tr><td class="num">6</td><td>+ Administration</td><td class="num">83,502,860</td><td class="num">9,137.99</td><td class="num">0.9347</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>2.2 Top 3 特徵與最終模型</h3>
+    <ul>
+      <li><strong>Top 3</strong>：<code>R&amp;D Spend</code>、<code>Marketing Spend</code>、<code>State_California</code></li>
+      <li>測試集 MSE = <code>67,229,760</code>，RMSE = <code>8199.38</code>，R² = <code>0.9474</code></li>
+    </ul>
+    <div class="formula">Profit = 46335.26 + 0.7886·(R&amp;D Spend) + 0.0326·(Marketing Spend) + 20.32·(State_California)</div>
+
+    <h3>2.3 完整程式碼（<code>mlr_50_startups.py</code>）</h3>
+    <details>
+      <summary>展開程式碼</summary>
+<pre><code>import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
+os.makedirs("images", exist_ok=True)
+
+# ---------- Data Preparation ----------
+df = pd.read_csv("50_Startups.csv")
+print(df.head())
+print(df.isnull().sum())
+
+df = pd.get_dummies(df, columns=["State"], dtype=int)   # One-Hot Encoding
+X = df.drop(columns=["Profit"])
+y = df["Profit"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=0
+)
+
+# ---------- Forward Selection ----------
+def evaluate(features):
+    model = LinearRegression().fit(X_train[features], y_train)
+    pred = model.predict(X_test[features])
+    mse = mean_squared_error(y_test, pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, pred)
+    return mse, rmse, r2
+
+remaining = list(X.columns)
+selected = []
+records = []
+
+while remaining:
+    best = None
+    for f in remaining:
+        mse, rmse, r2 = evaluate(selected + [f])
+        if best is None or rmse &lt; best[2]:
+            best = (f, mse, rmse, r2)
+    f, mse, rmse, r2 = best
+    selected.append(f)
+    remaining.remove(f)
+    records.append({
+        "Number of Features": len(selected),
+        "Selected Features": list(selected),
+        "MSE": mse,
+        "RMSE": rmse,
+        "R-squared": r2,
+    })
+
+result = pd.DataFrame(records)
+print(result.to_string(index=False))
+
+# ---------- Top 3 ----------
+top3 = result.loc[2, "Selected Features"]
+print("Top 3 features:", top3)
+
+final = LinearRegression().fit(X_train[top3], y_train)
+print("Intercept:", final.intercept_)
+print("Coefficients:", dict(zip(top3, final.coef_)))
+print("Test MSE / RMSE / R2:", evaluate(top3))
+
+# ---------- 貼圖：MSE / RMSE / R² by Number of Features ----------
+fig, ax = plt.subplots(1, 3, figsize=(16, 5))
+for a, col in zip(ax, ["MSE", "RMSE", "R-squared"]):
+    a.plot(result["Number of Features"], result[col], marker="o")
+    a.axvline(3, color="gray", linestyle="--", linewidth=1)
+    a.set_title(f"{col} by Number of Features")
+    a.set_xlabel("Number of Features"); a.set_ylabel(col)
+plt.tight_layout()
+plt.savefig("images/rmse_r2_by_features.png", dpi=150)
+plt.show()
+
+# 另存 HTML 表格，方便貼進報告
+result.to_html("images/feature_selection_table.html", index=False)</code></pre>
+    </details>
+  </section>
+
+  <section id="charts">
+    <h2>3. 圖表</h2>
+    <figure>
+      <img src="images/rmse_r2_by_features.png" alt="MSE、RMSE 與 R² 隨特徵數變化的折線圖，虛線標示特徵數 3">
+      <figcaption>MSE / RMSE / R² by Number of Features（虛線 = Top 3）</figcaption>
+    </figure>
+    <h3>圖表說明</h3>
+    <ul>
+      <li>MSE / RMSE 在特徵數 = 2～3 時達到最低（RMSE ≈ 8199）、R² 最高（≈ 0.9474），之後再加入特徵誤差反而上升 → 典型的 <strong>overfitting</strong> U 型曲線。</li>
+      <li>第 3 個特徵 <code>State_California</code> 的係數僅約 20，對 RMSE 幾乎無影響（8198.80 → 8199.38），顯示 State 對 Profit 幾乎沒有解釋力。</li>
+      <li>特徵數 4 與 5 結果完全相同：三個 State dummy 加總恆為 1，與截距完全共線（<strong>dummy variable trap</strong>），第三個 dummy 不提供新資訊。</li>
+      <li>最後加入的 <code>Administration</code> 使 RMSE 跳升至 9138，是最不重要的特徵。</li>
+      <li>依作業要求取 <strong>Top 3</strong>（虛線處）作為最終特徵集合，R² = 0.947。</li>
+    </ul>
+  </section>
+
+  <section id="appendix">
+    <h2>附錄：資料集欄位</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>欄位</th><th>型態</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td>R&amp;D Spend</td><td>float</td><td>研發支出</td></tr>
+          <tr><td>Administration</td><td>float</td><td>行政支出</td></tr>
+          <tr><td>Marketing Spend</td><td>float</td><td>行銷支出</td></tr>
+          <tr><td>State</td><td>category</td><td>New York / California / Florida（One-Hot 後 3 欄）</td></tr>
+          <tr><td>Profit</td><td>float</td><td><strong>目標變數</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：Kaggle 50_Startups ·
+    原始碼：<a href="https://github.com/Kuonaiwei1126/50startup">github.com/Kuonaiwei1126/50startup</a> ·
+    <a href="50_Startups.csv">下載 CSV</a>
+  </footer>
+</main>
+</body>
+</html>
