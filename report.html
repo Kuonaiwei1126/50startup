@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>50_Startups MLR 報告</title>
+<meta name="description" content="sklearn 多元線性迴歸（MLR）— Kaggle 50_Startups：CRISP-DM、Forward Selection（Top 3）、MSE / RMSE / R² 圖表">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --text: #1f2328;
+    --muted: #5b636e;
+    --border: #e2e4e8;
+    --accent: #2f6fde;
+    --accent-soft: #e8f0fd;
+    --highlight: #fff6db;
+    --code-bg: #f1f3f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121417;
+      --surface: #1a1d21;
+      --text: #e6e8eb;
+      --muted: #9aa3ad;
+      --border: #2c3036;
+      --accent: #6ea0f5;
+      --accent-soft: #1d2a40;
+      --highlight: #3a3220;
+      --code-bg: #15181c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121417;
+    --surface: #1a1d21;
+    --text: #e6e8eb;
+    --muted: #9aa3ad;
+    --border: #2c3036;
+    --accent: #6ea0f5;
+    --accent-soft: #1d2a40;
+    --highlight: #3a3220;
+    --code-bg: #15181c;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.75;
+    font-size: 16px;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 48px 16px 80px; }
+  header { margin-bottom: 40px; }
+  .eyebrow { color: var(--accent); font-weight: 500; font-size: 14px; letter-spacing: .04em; margin: 0 0 8px; }
+  h1 { font-size: clamp(26px, 5vw, 36px); line-height: 1.3; margin: 0 0 16px; }
+  h2 { font-size: 24px; margin: 56px 0 16px; padding-top: 8px; border-top: 1px solid var(--border); }
+  h3 { font-size: 18px; margin: 32px 0 12px; }
+  p, li { color: var(--text); }
+  .lead { color: var(--muted); margin: 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 12px; font-size: 13px; }
+  nav.toc { margin-top: 24px; font-size: 14px; }
+  nav.toc a { color: var(--accent); text-decoration: none; margin-right: 16px; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .stat .label { color: var(--muted); font-size: 13px; }
+  .stat .value { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 500; color: var(--muted); background: var(--code-bg); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th.num { text-align: right; }
+  tr.best td { background: var(--highlight); }
+  td strong { white-space: nowrap; }
+
+  code { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; font-size: .9em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+  pre code { background: none; padding: 0; }
+  details { margin: 16px 0; }
+  summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+
+  .formula { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 14px; white-space: nowrap; }
+  figure { margin: 24px 0; }
+  figure img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: block; }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 8px; text-align: center; }
+  footer { margin-top: 64px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Multiple Linear Regression · scikit-learn</p>
+    <h1>sklearn 多元線性迴歸（MLR）— Kaggle 50_Startups</h1>
+    <p class="lead">分析 Kaggle 50_Startups 多元線性迴歸的特徵選擇方案，比較使用 1～5 個特徵時的 RMSE 與 R²，並附上可重現結果的 prompt。</p>
+    <div class="meta">
+      <span class="chip">50 筆樣本</span>
+      <span class="chip">5 個候選特徵</span>
+      <span class="chip">R&amp;D Spend · Administration · Marketing Spend · State → Profit</span>
+      <span class="chip">Python · pandas · scikit-learn · matplotlib</span>
+    </div>
+    <nav class="toc">
+      <a href="#result">1. 1～5 特徵結果</a>
+      <a href="#schemes">2. 方案比較</a>
+      <a href="#crisp-dm">3. CRISP-DM</a>
+      <a href="#prompt">4. Prompt</a>
+      <a href="#appendix">附錄</a>
+    </nav>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="label">最佳特徵數（Forward）</div><div class="value">2</div></div>
+    <div class="stat"><div class="label">最低測試 RMSE</div><div class="value">8,198.80</div></div>
+    <div class="stat"><div class="label">最高測試 R²</div><div class="value">0.9474</div></div>
+    <div class="stat"><div class="label">全部 5 特徵 RMSE</div><div class="value">9,137.99</div></div>
+  </div>
+
+  <section id="result">
+    <h2>1. Forward Selection：1～5 個特徵的表現</h2>
+    <p>State 做 One-Hot Encoding 並 <code>drop_first=True</code>（California 為基準，避免 dummy variable trap），得到 5 個候選特徵：<code>R&amp;D Spend</code>、<code>Administration</code>、<code>Marketing Spend</code>、<code>State_Florida</code>、<code>State_New York</code>。訓練 / 測試 = 80 / 20，<code>random_state=0</code>。每一步加入「使測試 RMSE 最小」的特徵。</p>
+    <figure>
+      <img src="images/rmse_r2_by_features.png" alt="Forward Selection 下 RMSE 與 R² 隨特徵數 1 到 5 的變化">
+      <figcaption>RMSE / R-squared by Number of Features（Forward Selection）</figcaption>
+    </figure>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="num">特徵數</th><th>Selected Features</th><th class="num">RMSE</th><th class="num">R²</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">1</td><td>[R&amp;D Spend]</td><td class="num">8274.868018</td><td class="num">0.946459</td></tr>
+          <tr class="best"><td class="num">2</td><td>[R&amp;D Spend, Marketing Spend] <strong>（最佳）</strong></td><td class="num">8198.797191</td><td class="num">0.947439</td></tr>
+          <tr><td class="num">3</td><td>[R&amp;D Spend, Marketing Spend, State_New York]</td><td class="num">8309.059683</td><td class="num">0.946015</td></tr>
+          <tr><td class="num">4</td><td>[R&amp;D Spend, Marketing Spend, State_New York, State_Florida]</td><td class="num">8409.916714</td><td class="num">0.944697</td></tr>
+          <tr><td class="num">5</td><td>[R&amp;D Spend, Marketing Spend, State_New York, State_Florida, Administration]</td><td class="num">9137.990153</td><td class="num">0.934707</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>分析</h3>
+    <ul>
+      <li><strong>R&amp;D Spend 是主導特徵</strong>：單獨使用就有 R² = 0.9465，任何方案第 1 個選到的都是它。</li>
+      <li><strong>2 個特徵最佳</strong>：加入 Marketing Spend 後 RMSE 降到最低 8198.80、R² 最高 0.9474；再加特徵誤差上升 → 測試集上的 overfitting（U 型曲線）。</li>
+      <li><strong>State 幾乎沒有解釋力</strong>：加入 State_New York、State_Florida 後 RMSE 反而升到 8309 → 8410。</li>
+      <li><strong>Administration 是最差的特徵</strong>：最後加入時 RMSE 從 8410 跳到 9138，R² 降到 0.9347。</li>
+      <li>注意：作業圖片第 5 列標為 <code>State_California</code>，但在 <code>drop_first=True</code> 下 California 是被丟掉的基準類別，第 5 個實際加入的是 <code>Administration</code>（數值 9137.990153 / 0.934707 完全一致）。</li>
+    </ul>
+  </section>
+
+  <section id="schemes">
+    <h2>2. 特徵選擇方案比較</h2>
+    <p>同一份切分、同一個 <code>LinearRegression</code>，比較四種方案在 k = 1～5 時選出的特徵與測試集表現。</p>
+    <figure>
+      <img src="images/scheme_comparison.png" alt="四種特徵選擇方案在特徵數 1 到 5 時的 RMSE 與 R² 比較">
+      <figcaption>Forward / Backward / RFE / SelectKBest 的 RMSE 與 R²</figcaption>
+    </figure>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>方案</th><th>原理</th><th>最佳 k</th><th>最佳特徵組合</th><th class="num">RMSE</th><th class="num">R²</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Forward Selection</strong></td><td>從空集合開始，每步加入讓 RMSE 最小的特徵</td><td class="num">2</td><td>R&amp;D, Marketing</td><td class="num">8198.80</td><td class="num">0.9474</td></tr>
+          <tr class="best"><td><strong>Backward Elimination</strong></td><td>從全部特徵開始，每步移除讓 RMSE 最小的特徵</td><td class="num">3</td><td>R&amp;D, Administration, State_Florida</td><td class="num">8171.65</td><td class="num">0.9478</td></tr>
+          <tr><td><strong>RFE</strong></td><td>依標準化後係數絕對值，遞迴刪除最小者</td><td class="num">2</td><td>R&amp;D, Marketing</td><td class="num">8198.80</td><td class="num">0.9474</td></tr>
+          <tr><td><strong>SelectKBest</strong></td><td><code>f_regression</code> 單變量 F 檢定，取前 k 高</td><td class="num">2</td><td>R&amp;D, Marketing</td><td class="num">8198.80</td><td class="num">0.9474</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>各方案 1～5 特徵 RMSE</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>方案</th><th class="num">k=1</th><th class="num">k=2</th><th class="num">k=3</th><th class="num">k=4</th><th class="num">k=5</th></tr></thead>
+        <tbody>
+          <tr><td>Forward Selection</td><td class="num">8274.87</td><td class="num">8198.80</td><td class="num">8309.06</td><td class="num">8409.92</td><td class="num">9137.99</td></tr>
+          <tr><td>Backward Elimination</td><td class="num">8274.87</td><td class="num">8217.45</td><td class="num">8171.65</td><td class="num">8178.37</td><td class="num">9137.99</td></tr>
+          <tr><td>RFE</td><td class="num">8274.87</td><td class="num">8198.80</td><td class="num">8803.78</td><td class="num">9068.54</td><td class="num">9137.99</td></tr>
+          <tr><td>SelectKBest (f_regression)</td><td class="num">8274.87</td><td class="num">8198.80</td><td class="num">8803.78</td><td class="num">8997.20</td><td class="num">9137.99</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>比較結論</h3>
+    <ul>
+      <li>四種方案在 k = 1 都選 R&amp;D Spend；k = 5 都是全部特徵（RMSE 9137.99），差異只在中間的選法。</li>
+      <li><strong>RFE 與 SelectKBest</strong> 只看係數大小或單變量相關，k = 3 時都納入 Administration，RMSE 直接升到 8804，表現最差。</li>
+      <li><strong>Backward Elimination</strong> 在 k = 3 得到最低 RMSE 8171.65，但只比 Forward 的 k = 2 低 27（約 0.3%）。這兩種 wrapper 方法都直接用測試集挑特徵，會有選擇偏誤（data leakage）；正式做法應改用訓練集上的 cross-validation 來選。</li>
+      <li>整體建議：<strong>R&amp;D Spend + Marketing Spend</strong> 兩個特徵就足夠，簡單且在三種方案中一致最佳。</li>
+    </ul>
+  </section>
+
+  <section id="crisp-dm">
+    <h2>3. CRISP-DM</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>階段</th><th>本作業對應內容</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Business Understanding</strong></td><td>預測新創公司的 <strong>Profit</strong>，找出哪些支出（R&amp;D / Administration / Marketing）與所在州對獲利影響最大。</td></tr>
+          <tr><td><strong>Data Understanding</strong></td><td>50 筆、3 個數值特徵 + 1 個類別 State，無缺失值；R&amp;D Spend 與 Profit 相關最高。</td></tr>
+          <tr><td><strong>Data Preparation</strong></td><td>State One-Hot Encoding（<code>drop_first=True</code>），80 / 20 切分（<code>random_state=0</code>）。</td></tr>
+          <tr><td><strong>Modeling</strong></td><td><code>LinearRegression</code> + 四種特徵選擇方案（Forward、Backward、RFE、SelectKBest）。</td></tr>
+          <tr><td><strong>Evaluation</strong></td><td>測試集 RMSE 與 R²，畫出特徵數 1～5 的曲線比較。</td></tr>
+          <tr><td><strong>Deployment</strong></td><td>選用 R&amp;D Spend + Marketing Spend 的模型，報告發佈到 GitHub Pages。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="prompt">
+    <h2>4. 可重現此結果的 Prompt</h2>
+    <p>把下面的 prompt 貼給 AI（例如 Claude），並附上 <code>50_Startups.csv</code>，就能產生上面的程式、表格與圖。</p>
+<pre><code>請用 Python（pandas、numpy、scikit-learn、matplotlib）分析 Kaggle 50_Startups 資料集
+（50_Startups.csv，欄位：R&amp;D Spend, Administration, Marketing Spend, State, Profit）
+的多元線性迴歸特徵選擇方案，目標變數為 Profit。
+
+要求：
+1. 資料前處理：State 用 pd.get_dummies(..., drop_first=True, dtype=int) 做 One-Hot Encoding，
+   得到 5 個候選特徵；train_test_split(test_size=0.2, random_state=0)。
+2. 模型使用 sklearn.linear_model.LinearRegression，評估指標為測試集 RMSE 與 R-squared。
+3. 主要方案 Forward Selection：從空集合開始，每一步加入使測試集 RMSE 最小的特徵，
+   直到 5 個特徵全部加入，記錄每一步的 Number of Features、Selected Features、RMSE、R-squared。
+4. 另外比較 Backward Elimination、RFE（特徵先標準化）、SelectKBest(f_regression)，
+   各自列出 k = 1~5 的選出特徵、RMSE、R-squared。
+5. 繪圖：
+   (a) 1×2 子圖：「RMSE by Number of Features」與「R-squared by Number of Features」
+       （Forward Selection，折線加圓點），存成 images/rmse_r2_by_features.png；
+   (b) 四種方案疊在同一組 RMSE / R² 圖上比較，存成 images/scheme_comparison.png。
+6. 輸出 Forward Selection 結果表（Number of Features, Selected Features, RMSE, R-squared）
+   成 HTML 表格。
+7. 用繁體中文分析：最佳特徵數、哪些特徵最重要 / 最不重要、是否 overfitting、
+   各方案差異，並提醒用測試集選特徵會有 data leakage。
+8. 依 CRISP-DM 六階段整理成報告，最後做成單一 index.html 部署到 GitHub Pages。
+
+預期結果（Forward Selection）：
+k=1 [R&amp;D Spend] RMSE 8274.87 R² 0.9465
+k=2 [+Marketing Spend] RMSE 8198.80 R² 0.9474（最佳）
+k=3 [+State_New York] RMSE 8309.06 R² 0.9460
+k=4 [+State_Florida] RMSE 8409.92 R² 0.9447
+k=5 [+Administration] RMSE 9137.99 R² 0.9347</code></pre>
+
+    <h3>完整程式碼（<code>mlr_50_startups.py</code>）</h3>
+    <details>
+      <summary>展開程式碼</summary>
+<pre><code>import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import RFE, SelectKBest, f_regression
+from sklearn.metrics import mean_squared_error, r2_score
+
+os.makedirs("images", exist_ok=True)
+
+# ---------- Data Preparation ----------
+df = pd.read_csv("50_Startups.csv")
+print(df.head())
+print(df.isnull().sum())
+
+# One-Hot Encoding，drop_first 避免 dummy variable trap（California 為基準）→ 5 個候選特徵
+df = pd.get_dummies(df, columns=["State"], drop_first=True, dtype=int)
+X = df.drop(columns=["Profit"])
+y = df["Profit"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=0
+)
+
+def evaluate(features):
+    model = LinearRegression().fit(X_train[features], y_train)
+    pred = model.predict(X_test[features])
+    mse = mean_squared_error(y_test, pred)
+    return mse, np.sqrt(mse), r2_score(y_test, pred)
+
+def make_table(scheme, feature_sets):
+    rows = []
+    for k, features in enumerate(feature_sets, start=1):
+        mse, rmse, r2 = evaluate(features)
+        rows.append({"Scheme": scheme, "Number of Features": k,
+                     "Selected Features": list(features),
+                     "MSE": mse, "RMSE": rmse, "R-squared": r2})
+    return pd.DataFrame(rows)
+
+n = X.shape[1]
+
+# ---------- Scheme 1: Forward Selection（每步加入使測試 RMSE 最小的特徵）----------
+remaining, selected, forward_sets = list(X.columns), [], []
+while remaining:
+    best = min(remaining, key=lambda f: evaluate(selected + [f])[1])
+    selected.append(best)
+    remaining.remove(best)
+    forward_sets.append(list(selected))
+
+# ---------- Scheme 2: Backward Elimination（每步移除使測試 RMSE 最小的特徵）----------
+current, backward_sets = list(X.columns), [list(X.columns)]
+while len(current) &gt; 1:
+    worst = min(current, key=lambda f: evaluate([c for c in current if c != f])[1])
+    current.remove(worst)
+    backward_sets.insert(0, list(current))
+
+# ---------- Scheme 3: RFE（依係數大小遞迴刪除，特徵先標準化）----------
+X_std = (X_train - X_train.mean()) / X_train.std()
+rfe_sets = []
+for k in range(1, n + 1):
+    rfe = RFE(LinearRegression(), n_features_to_select=k).fit(X_std, y_train)
+    rfe_sets.append(list(X.columns[rfe.support_]))
+
+# ---------- Scheme 4: SelectKBest（f_regression 單變量 F 檢定）----------
+kbest_sets = []
+for k in range(1, n + 1):
+    kb = SelectKBest(f_regression, k=k).fit(X_train, y_train)
+    kbest_sets.append(list(X.columns[kb.get_support()]))
+
+tables = {
+    "Forward Selection": make_table("Forward Selection", forward_sets),
+    "Backward Elimination": make_table("Backward Elimination", backward_sets),
+    "RFE": make_table("RFE", rfe_sets),
+    "SelectKBest (f_regression)": make_table("SelectKBest (f_regression)", kbest_sets),
+}
+for name, t in tables.items():
+    print(f"\n=== {name} ===")
+    print(t.drop(columns="Scheme").to_string(index=False))
+
+result = tables["Forward Selection"]
+
+# ---------- 貼圖 1：Forward Selection 的 RMSE / R² vs. 特徵數 ----------
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+for a, col in zip(ax, ["RMSE", "R-squared"]):
+    a.plot(result["Number of Features"], result[col], marker="o")
+    a.set_title(f"{col} by Number of Features")
+    a.set_xlabel("Number of Features"); a.set_ylabel(col)
+plt.tight_layout()
+plt.savefig("images/rmse_r2_by_features.png", dpi=150)
+
+# ---------- 貼圖 2：四種方案比較 ----------
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+for name, t in tables.items():
+    ax[0].plot(t["Number of Features"], t["RMSE"], marker="o", label=name)
+    ax[1].plot(t["Number of Features"], t["R-squared"], marker="o", label=name)
+for a, col in zip(ax, ["RMSE", "R-squared"]):
+    a.set_title(f"{col} by Number of Features (all schemes)")
+    a.set_xlabel("Number of Features"); a.set_ylabel(col)
+    a.set_xticks(range(1, n + 1)); a.legend(fontsize=8)
+plt.tight_layout()
+plt.savefig("images/scheme_comparison.png", dpi=150)
+plt.show()
+
+# 另存 HTML 表格，方便貼進報告
+result[["Number of Features", "Selected Features", "RMSE", "R-squared"]].to_html(
+    "images/feature_selection_table.html", index=False)
+pd.concat(tables.values()).to_csv("images/all_schemes.csv", index=False)</code></pre>
+    </details>
+  </section>
+
+<section id="appendix">
+    <h2>附錄：資料集欄位</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>欄位</th><th>型態</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td>R&amp;D Spend</td><td>float</td><td>研發支出</td></tr>
+          <tr><td>Administration</td><td>float</td><td>行政支出</td></tr>
+          <tr><td>Marketing Spend</td><td>float</td><td>行銷支出</td></tr>
+          <tr><td>State</td><td>category</td><td>New York / California / Florida（One-Hot + drop_first 後 2 欄）</td></tr>
+          <tr><td>Profit</td><td>float</td><td><strong>目標變數</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：Kaggle 50_Startups ·
+    原始碼：<a href="https://github.com/Kuonaiwei1126/50startup">github.com/Kuonaiwei1126/50startup</a> ·
+    <a href="index.html">互動式探索器</a> · <a href="50_Startups.csv">下載 CSV</a>
+  </footer>
+</main>
+</body>
+</html>
