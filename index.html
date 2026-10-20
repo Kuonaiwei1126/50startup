@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>50 Startups MLR Explorer</title>
-<meta name="description" content="互動式多元線性迴歸特徵選擇探索器：比較 Lasso、Forward SFS、RFE、ElasticNet、Exhaustive Search 在 k = 1～5 個特徵下的表現，附係數統計、VIF、即時預測與殘差診斷。">
+<title>MLR Feature Selection Explorer</title>
+<meta name="description" content="互動式多元線性迴歸特徵選擇探索器（50 Startups、Boston Housing）：比較 Lasso、Forward SFS、RFE、ElasticNet、Exhaustive Search 在 k = 1～5 個特徵下的表現，附係數統計、VIF、即時預測與殘差診斷。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -160,6 +160,12 @@
   .predict .value { font-size: 36px; font-weight: 700; color: #6ee7b7; margin: 6px 0; }
   .predict .breakdown { font-size: 12px; color: rgba(255,255,255,.8); }
 
+  .ds-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; border-color: var(--accent); }
+  .ds-bar label { font-weight: 700; display: flex; flex-direction: column; }
+  .ds-bar .step-label { margin: 0; }
+  .ds-bar select { font: inherit; font-size: 15px; font-weight: 500; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); min-width: 260px; max-width: 100%; }
+  .ds-bar .ds-meta { color: var(--muted); font-size: 13px; }
+  .fields { max-height: 420px; overflow-y: auto; padding-right: 6px; margin-bottom: 12px; }
   footer { margin-top: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px; color: var(--text-2); }
   @media (max-width: 820px) { footer { grid-template-columns: 1fr; } }
   footer h4 { margin: 0 0 6px; font-size: 13px; color: var(--text); }
@@ -171,8 +177,8 @@
 <main>
   <div class="topbar">
     <div>
-      <div class="crumbs">Home › Regression Analysis › 50 Startups Feature Progression</div>
-      <h1>50 Startups 多元線性迴歸探索器 <span class="tag">CRISP-DM</span></h1>
+      <div class="crumbs">Home › Regression Analysis › <span id="crumb-ds"></span></div>
+      <h1><span id="page-title"></span> <span class="tag">CRISP-DM</span></h1>
     </div>
     <div class="links">
       <a href="report.html">靜態報告</a>
@@ -181,16 +187,23 @@
   </div>
 
   <div class="stack">
+    <section class="card ds-bar">
+      <label for="dataset-select"><span class="step-label">DATASET</span>選擇資料集</label>
+      <select id="dataset-select" aria-label="選擇資料集"></select>
+      <div class="ds-meta" id="ds-meta"></div>
+    </section>
+
     <section class="hero">
-      <h2>Feature Selection &amp; Parsimony Analysis</h2>
-      <p>比較 5 種特徵選擇演算法（<strong>Lasso、Forward SFS、RFE、ElasticNet、Exhaustive Search</strong>）與基準 OLS。探索特徵數 k = 1～5 的 bias-variance 取捨，找出 <strong>最佳甜蜜點</strong> 與 <strong>overfitting 懸崖</strong>。</p>
+      <h2 id="hero-title"></h2>
+      <p id="hero-blurb"></p>
+      <p id="hero-desc"></p>
       <div class="pills" id="hero-pills"></div>
     </section>
 
     <section class="card">
       <p class="step-label">1. 選擇特徵選擇演算法</p>
       <div class="seg" id="method-seg" role="group" aria-label="特徵選擇演算法"></div>
-      <p class="step-label">2. 特徵數量（k = 1～5）</p>
+      <p class="step-label">2. 特徵數量（k = 1～<span id="k-max"></span>）</p>
       <div class="seg" id="k-seg" role="group" aria-label="特徵數"></div>
     </section>
 
@@ -220,7 +233,7 @@
 
     <section class="card">
       <h3>五種方法比較（RMSE）</h3>
-      <p class="sub">同一份 80/20 切分、同一個 LinearRegression；僅特徵子集不同。</p>
+      <p class="sub">同一份 80/20 切分、同一個 LinearRegression；僅特徵子集不同。綠色 = 該方法最佳 k；底色 = 目前選擇。</p>
       <div class="table-wrap"><table id="compare-table"></table></div>
     </section>
 
@@ -237,34 +250,12 @@
       </section>
       <section class="card">
         <div class="chart-head">
-          <div><h3>Live Profit Predictor</h3><p class="sub">用目前選擇的模型即時預測。</p></div>
+          <div><h3>Live <span id="target-name"></span> Predictor</h3><p class="sub">用目前選擇的模型即時預測；未被選入的特徵不影響結果。</p></div>
           <span class="badge good">⚡ Real-time</span>
         </div>
-        <div class="field">
-          <label for="in-rd">R&amp;D Spend ($) <span id="v-rd"></span></label>
-          <input type="number" id="in-rd" min="0" max="200000" step="1000" value="100000">
-          <input type="range" id="r-rd" min="0" max="200000" step="1000" value="100000" aria-label="R&D Spend slider">
-        </div>
-        <div class="field">
-          <label for="in-mk">Marketing Spend ($) <span id="v-mk"></span></label>
-          <input type="number" id="in-mk" min="0" max="500000" step="1000" value="150000">
-          <input type="range" id="r-mk" min="0" max="500000" step="1000" value="150000" aria-label="Marketing Spend slider">
-        </div>
-        <div class="field">
-          <label for="in-ad">Administration ($) <span id="v-ad"></span></label>
-          <input type="number" id="in-ad" min="0" max="200000" step="1000" value="120000">
-          <input type="range" id="r-ad" min="0" max="200000" step="1000" value="120000" aria-label="Administration slider">
-        </div>
-        <div class="field">
-          <label for="in-state">State Location</label>
-          <select id="in-state">
-            <option value="California">California (Reference)</option>
-            <option value="Florida">Florida</option>
-            <option value="New York">New York</option>
-          </select>
-        </div>
+        <div id="predict-fields" class="fields"></div>
         <div class="predict">
-          <div class="label">PREDICTED STARTUP PROFIT</div>
+          <div class="label">PREDICTED <span id="target-name2"></span></div>
           <div class="value mono" id="pred-value"></div>
           <div class="breakdown" id="pred-breakdown"></div>
         </div>
@@ -273,22 +264,27 @@
 
     <section class="card">
       <div class="chart-head">
-        <div><h3>Test Set Residuals &amp; Outliers Diagnostic</h3><p class="sub">測試集 10 家公司的樣本外殘差，依 |residual| 排序；超過 RMSE 標為 High Residual。</p></div>
+        <div><h3>Test Set Residuals &amp; Outliers Diagnostic</h3><p class="sub" id="resid-sub"></p></div>
         <span class="badge neutral">Sorted by |Residual|</span>
       </div>
       <div class="table-wrap"><table id="resid-table"></table></div>
+    </section>
+
+    <section class="card">
+      <h3>特徵說明</h3>
+      <div class="table-wrap"><table id="feature-table"></table></div>
     </section>
   </div>
 
   <footer>
     <div>
-      <h4>50 Startups CRISP-DM Machine Learning Project</h4>
+      <h4>CRISP-DM Machine Learning Project</h4>
       <p>多元線性迴歸特徵選擇、簡約性驗證與統計推論。純 HTML / CSS / JavaScript + Chart.js；資料由 <a href="https://github.com/Kuonaiwei1126/50startup/blob/main/build_data.py">build_data.py</a> 以 scikit-learn 計算後寫入 data.js。</p>
     </div>
     <div>
       <h4>REFERENCES</h4>
-      <p><strong>Dataset：</strong>Kaggle 50 Startups（R&amp;D Spend, Administration, Marketing Spend, State, Profit；n = 50）</p>
-      <p><strong>Split：</strong>train_test_split(test_size=0.2, random_state=0)；State One-Hot（drop_first，California 為基準）</p>
+      <p><strong>Dataset：</strong><span id="foot-source"></span></p>
+      <p><strong>Split：</strong><span id="foot-prep"></span></p>
       <p><strong>Methodology：</strong>CRISP-DM（Cross-Industry Standard Process for Data Mining）</p>
     </div>
   </footer>
@@ -297,38 +293,65 @@
 <script>
 (function () {
   const D = window.DATA;
-  const FEATURES = D.features;
-  const N = FEATURES.length;
-  const state = { m: 0, k: 2 };
   const $ = (id) => document.getElementById(id);
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const state = { d: 0, m: 0, k: 2 };
 
-  const money = (v, d = 2) => "$" + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-  const num = (v, d) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-  const pfmt = (p) => p < 1e-4 ? "< 0.0001" : p.toFixed(4);
-  const short = (f) => f.replace("State_", "");
-
-  const method = () => D.methods[state.m];
+  const ds = () => D.datasets[state.d];
+  const method = () => ds().methods[state.m];
   const result = () => method().results[state.k - 1];
+  const nFeat = () => ds().features.length;
   const bestK = (m) => m.results.reduce((b, r, i) => r.rmse < m.results[b].rmse ? i : b, 0) + 1;
   const worstK = (m) => m.results.reduce((b, r, i) => r.rmse > m.results[b].rmse ? i : b, 0) + 1;
 
-  // ---- 全域甜蜜點 / 懸崖（跨所有方法）----
-  const all = D.methods.flatMap(m => m.results.map(r => ({ m: m.name, r })));
-  const globalBest = all.reduce((a, b) => b.r.rmse < a.r.rmse ? b : a);
-  const globalWorst = all.reduce((a, b) => b.r.rmse > a.r.rmse ? b : a);
-  $("hero-pills").innerHTML = [
-    `<span class="pill">📊 50 Startups Dataset</span>`,
-    `<span class="pill">⚡ 5 Selection Methods</span>`,
-    `<span class="pill good">★ Global Sweet Spot：k=${globalBest.r.features.length}（${money(globalBest.r.rmse)} RMSE，${globalBest.m}）</span>`,
-    `<span class="pill warn">⚠ Overfitting：k=${globalWorst.r.features.length}（${money(globalWorst.r.rmse)} RMSE）</span>`,
-  ].join("");
+  const num = (v, d) => (+v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const money = (v, d) => { const s = ds(); return s.unit_prefix + num(v, d == null ? s.decimals : d) + s.unit_suffix; };
+  const pfmt = (p) => p < 1e-4 ? "< 0.0001" : p.toFixed(4);
+  const short = (f) => f.replace("State_", "");
+  const fmtEst = (v) => Math.abs(v) < 100 ? v.toFixed(4) : num(v, 4);
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+  // ---- 資料集下拉選單 ----
+  $("dataset-select").innerHTML = D.datasets.map((d, i) =>
+    `<option value="${i}">${esc(d.name)}（${d.features.length} 個特徵 → ${esc(d.target)}，n = ${d.n_rows}）</option>`).join("");
+  function selectDataset(i) {
+    state.d = i; state.m = 0; state.k = bestK(method());
+    $("dataset-select").value = i;
+    history.replaceState(null, "", "#" + ds().id);
+    buildPredictFields(); renderDataset(); render();
+  }
+  $("dataset-select").addEventListener("change", (e) => selectDataset(+e.target.value));
+
+  function renderDataset() {
+    const d = ds();
+    $("crumb-ds").textContent = d.name + " Feature Progression";
+    $("page-title").textContent = d.name + " 多元線性迴歸探索器";
+    document.title = d.name + " MLR Explorer";
+    $("ds-meta").innerHTML = `${d.n_rows} 筆 · ${d.features.length} 個特徵 · 目標 <strong>${esc(d.target)}</strong> · 訓練 ${d.n_train} / 測試 ${d.n_test}`;
+    $("hero-title").textContent = d.title;
+    $("hero-blurb").innerHTML = d.blurb;
+    $("hero-desc").innerHTML = `比較 5 種特徵選擇演算法（<strong>Lasso、Forward SFS、RFE、ElasticNet、Exhaustive Search</strong>）與基準 OLS。探索特徵數 k = 1～${d.features.length} 的 bias-variance 取捨，找出 <strong>最佳甜蜜點</strong> 與 <strong>overfitting 懸崖</strong>。`;
+    const all = d.methods.flatMap(m => m.results.map(r => ({ m: m.name, r })));
+    const gb = all.reduce((a, b) => b.r.rmse < a.r.rmse ? b : a);
+    const gw = all.reduce((a, b) => b.r.rmse > a.r.rmse ? b : a);
+    $("hero-pills").innerHTML = [
+      `<span class="pill">📊 ${esc(d.name)} Dataset</span>`,
+      `<span class="pill">⚡ 5 Selection Methods</span>`,
+      `<span class="pill good">★ Global Sweet Spot：k=${gb.r.features.length}（${money(gb.r.rmse)} RMSE，${gb.m}）</span>`,
+      `<span class="pill warn">⚠ Worst：k=${gw.r.features.length}（${money(gw.r.rmse)} RMSE，${gw.m}）</span>`,
+    ].join("");
+    $("k-max").textContent = d.features.length;
+    $("target-name").textContent = d.target; $("target-name2").textContent = d.target;
+    $("resid-sub").textContent = `測試集 ${d.n_test} 筆樣本外殘差中 |residual| 最大的 10 筆；超過 RMSE 標為 High Residual。`;
+    $("foot-source").textContent = d.source; $("foot-prep").textContent = d.prep;
+    $("feature-table").innerHTML = `<thead><tr><th>特徵</th><th>說明</th></tr></thead><tbody>` +
+      d.features.map(f => `<tr><td><strong>${esc(f)}</strong></td><td>${esc(d.feature_desc[f] || "")}</td></tr>`).join("") + `</tbody>`;
+  }
 
   // ---- 選擇器 ----
   function renderMethodSeg() {
-    $("method-seg").innerHTML = D.methods.map((m, i) =>
-      `<button type="button" data-m="${i}" aria-pressed="${i === state.m}" title="${m.desc}">${m.name} <small>${m.tag}</small></button>`
-    ).join("");
+    $("method-seg").innerHTML = ds().methods.map((m, i) =>
+      `<button type="button" data-m="${i}" aria-pressed="${i === state.m}" title="${esc(m.desc)}">${m.name} <small>${m.tag}</small></button>`).join("");
   }
   function renderKSeg() {
     const m = method(), bk = bestK(m), wk = worstK(m);
@@ -338,7 +361,7 @@
       const cls = k === bk ? "best" : k === wk ? "cliff" : "";
       const mark = k === bk ? "★ " : k === wk ? "⚠ " : "";
       const label = k === bk ? "Min RMSE" : k === wk ? "Max RMSE" : (i === 0 ? added : "+ " + added);
-      return `<button type="button" class="${cls}" data-k="${k}" aria-pressed="${k === state.k}">${mark}k = ${k} <small>${label}</small></button>`;
+      return `<button type="button" class="${cls}" data-k="${k}" aria-pressed="${k === state.k}">${mark}k = ${k} <small>${esc(label)}</small></button>`;
     }).join("");
   }
   $("method-seg").addEventListener("click", (e) => {
@@ -354,21 +377,21 @@
   function renderMetrics() {
     const m = method(), r = result(), bk = bestK(m), wk = worstK(m);
     const isBest = state.k === bk, isWorst = state.k === wk;
-    const rmseBadge = isBest ? `<span class="badge good">OPTIMAL</span>` : isWorst ? `<span class="badge warn">OVERFIT</span>` : "";
+    const rmseBadge = isBest ? `<span class="badge good">OPTIMAL</span>` : isWorst ? `<span class="badge warn">WORST</span>` : "";
     $("metrics").innerHTML = `
       <div class="metric ${isBest ? "best" : isWorst ? "cliff" : ""}"><div class="label">TEST RMSE ${rmseBadge}</div>
         <div class="value mono">${money(r.rmse)}</div><div class="note">越低越好（${m.name} 最佳 k=${bk}）</div></div>
       <div class="metric"><div class="label">R² SCORE <span class="badge good">${(r.r2 * 100).toFixed(1)}% FIT</span></div>
-        <div class="value mono">${r.r2.toFixed(4)}</div><div class="note">解釋 ${(r.r2 * 100).toFixed(2)}% 的 Profit 變異</div></div>
+        <div class="value mono">${r.r2.toFixed(4)}</div><div class="note">解釋 ${(r.r2 * 100).toFixed(2)}% 的 ${esc(ds().target)} 變異</div></div>
       <div class="metric"><div class="label">ADJUSTED R²</div>
         <div class="value mono">${r.adj_r2.toFixed(4)}</div><div class="note">對多餘參數做懲罰</div></div>
       <div class="metric"><div class="label">MEAN ABSOLUTE ERROR</div>
-        <div class="value mono">${money(r.mae)}</div><div class="note">平均預測誤差（$）</div></div>
+        <div class="value mono">${money(r.mae)}</div><div class="note">平均預測誤差</div></div>
       <div class="metric"><div class="label">F-STATISTIC <span class="badge ${r.f_p < 0.05 ? "good" : "warn"}">P ${pfmt(r.f_p)}</span></div>
         <div class="value mono">${num(r.f_stat, 1)}</div><div class="note">${r.f_p < 0.05 ? "模型整體顯著" : "模型整體不顯著"}</div></div>`;
 
     $("k-count").textContent = r.features.length;
-    $("active-chips").innerHTML = r.features.map(f => `<span class="chip">${f}</span>`).join("");
+    $("active-chips").innerHTML = r.features.map(f => `<span class="chip">${esc(f)}</span>`).join("");
     const razor = $("razor");
     if (isBest) {
       razor.className = "razor";
@@ -378,19 +401,19 @@
       razor.textContent = `⚠ 比 k=${bk} 多了 ${state.k - bk} 個特徵，RMSE 反而上升 ${money(r.rmse - m.results[bk - 1].rmse)} → 測試集 overfitting。`;
     } else {
       razor.className = "razor warn";
-      razor.textContent = `ℹ 特徵不足（underfit）：再加入 ${m.results[bk - 1].features.filter(f => !r.features.includes(f)).map(short).join("、")} 可將 RMSE 降到 ${money(m.results[bk - 1].rmse)}。`;
+      const missing = m.results[bk - 1].features.filter(f => !r.features.includes(f)).map(short);
+      razor.textContent = `ℹ 特徵不足（underfit）：再加入 ${missing.slice(0, 4).join("、")}${missing.length > 4 ? ` 等 ${missing.length} 個` : ""} 可將 RMSE 降到 ${money(m.results[bk - 1].rmse)}。`;
     }
     $("rmse-badge").textContent = `Min at k=${bk}`;
     $("r2-badge").textContent = `Peak at k=${m.results.reduce((b, x, i) => x.r2 > m.results[b].r2 ? i : b, 0) + 1}`;
   }
 
   // ---- 圖表 ----
-  let charts = {};
-  function chartFor(id, key, label, fmt) {
-    const ctx = $(id).getContext("2d");
-    const c = new Chart(ctx, {
+  const charts = {};
+  function chartFor(id, key, label) {
+    charts[key] = new Chart($(id).getContext("2d"), {
       type: "line",
-      data: { labels: [1, 2, 3, 4, 5], datasets: [{ label, data: [], borderWidth: 2, tension: 0, pointRadius: [], pointHoverRadius: 9, pointBackgroundColor: [], pointBorderColor: [], pointBorderWidth: 2 }] },
+      data: { labels: [], datasets: [{ label, data: [], borderWidth: 2, tension: 0, pointRadius: [], pointHoverRadius: 9, pointBackgroundColor: [], pointBorderColor: [], pointBorderWidth: 2 }] },
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
         interaction: { mode: "nearest", intersect: false },
@@ -401,18 +424,17 @@
             displayColors: false, padding: 10,
             callbacks: {
               title: (it) => `k = ${it[0].label}`,
-              label: (it) => `${label}: ${fmt(it.raw)}`,
-              afterLabel: (it) => method().results[it.dataIndex].features.map(short).join(", "),
+              label: (it) => `${label}: ${key === "rmse" ? money(it.raw) : (+it.raw).toFixed(4)}`,
+              afterLabel: (it) => { const f = method().results[it.dataIndex].features.map(short); return f.length > 6 ? f.slice(0, 6).join(", ") + ` … (+${f.length - 6})` : f.join(", "); },
             },
           },
         },
         scales: {
           x: { title: { display: true, text: "Number of Features (k)" }, grid: { display: false } },
-          y: { title: { display: true, text: label }, grid: { color: css("--grid") }, ticks: { callback: (v) => fmt(v) } },
+          y: { title: { display: true, text: label }, grid: {}, ticks: { callback: (v) => key === "rmse" ? money(v, ds().unit_suffix ? 1 : 0) : (+v).toFixed(3) } },
         },
       },
     });
-    charts[key] = c;
   }
   function updateCharts() {
     const m = method(), bk = bestK(m);
@@ -420,12 +442,13 @@
     Chart.defaults.color = text2;
     Chart.defaults.font.family = '"Noto Sans TC", system-ui, sans-serif';
     for (const [key, c] of Object.entries(charts)) {
-      const ds = c.data.datasets[0];
-      ds.data = m.results.map(r => r[key]);
-      ds.borderColor = s1;
-      ds.pointRadius = m.results.map((_, i) => i + 1 === state.k ? 8 : i + 1 === bk ? 7 : 5);
-      ds.pointBackgroundColor = m.results.map((_, i) => i + 1 === bk ? good : i + 1 === state.k ? s1 : surface);
-      ds.pointBorderColor = m.results.map((_, i) => i + 1 === bk ? good : s1);
+      const d = c.data.datasets[0];
+      c.data.labels = m.results.map((_, i) => i + 1);
+      d.data = m.results.map(r => r[key]);
+      d.borderColor = s1;
+      d.pointRadius = m.results.map((_, i) => i + 1 === state.k ? 8 : i + 1 === bk ? 7 : 5);
+      d.pointBackgroundColor = m.results.map((_, i) => i + 1 === bk ? good : i + 1 === state.k ? s1 : surface);
+      d.pointBorderColor = m.results.map((_, i) => i + 1 === bk ? good : s1);
       c.options.scales.y.grid.color = css("--grid");
       c.options.scales.x.ticks.color = text2; c.options.scales.y.ticks.color = text2;
       c.update();
@@ -434,29 +457,28 @@
 
   // ---- 方法比較表 ----
   function renderCompare() {
-    const rows = D.methods.map((m, mi) => {
+    const n = nFeat();
+    const rows = ds().methods.map((m, mi) => {
       const bk = bestK(m);
-      return `<tr>
-        <td><strong>${m.name}</strong><br><span style="color:var(--muted);font-size:11px">${m.desc}</span></td>
-        ${m.results.map((r, i) => `<td class="num mono" style="${i + 1 === bk ? "color:var(--good);font-weight:700" : ""}${mi === state.m && i + 1 === state.k ? ";background:var(--accent-soft)" : ""}" title="${r.features.join(", ")}">${num(r.rmse, 2)}</td>`).join("")}
+      return `<tr><td><strong>${m.name}</strong><br><span style="color:var(--muted);font-size:11px">${esc(m.desc)}</span></td>
+        ${m.results.map((r, i) => `<td class="num mono" style="${i + 1 === bk ? "color:var(--good);font-weight:700" : ""}${mi === state.m && i + 1 === state.k ? ";background:var(--accent-soft)" : ""}" title="${esc(r.features.join(", "))}">${num(r.rmse, ds().decimals)}</td>`).join("")}
         <td class="num">k=${bk}</td></tr>`;
     });
-    $("compare-table").innerHTML = `<thead><tr><th>方法</th>${[1,2,3,4,5].map(k => `<th class="num">k=${k}</th>`).join("")}<th class="num">最佳</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+    $("compare-table").innerHTML = `<thead><tr><th>方法</th>${Array.from({ length: n }, (_, i) => `<th class="num">k=${i + 1}</th>`).join("")}<th class="num">最佳</th></tr></thead><tbody>${rows.join("")}</tbody>`;
   }
 
   // ---- 方程式與係數表 ----
   function renderEquation() {
     const r = result();
-    const terms = r.coefs.slice(1).map(c => `${c.est < 0 ? "−" : "+"} <span class="coef">${Math.abs(c.est) < 1 ? Math.abs(c.est).toFixed(4) : num(Math.abs(c.est), 2)}</span> × (<span class="feat">${c.name}</span>)`);
-    $("equation").innerHTML = `Profit = <span class="coef">${num(r.coefs[0].est, 2)}</span> ${terms.join(" ")}`;
+    const terms = r.coefs.slice(1).map(c => `${c.est < 0 ? "−" : "+"} <span class="coef">${Math.abs(c.est) < 1 ? Math.abs(c.est).toFixed(4) : num(Math.abs(c.est), 2)}</span> × (<span class="feat">${esc(c.name)}</span>)`);
+    $("equation").innerHTML = `${esc(ds().target)} = <span class="coef">${num(r.coefs[0].est, 2)}</span> ${terms.join(" ")}`;
   }
   function renderCoefs() {
     const r = result();
     const rows = r.coefs.map(c => {
       const sig = c.p < 0.05;
       const vif = c.vif == null ? "-" : `<span class="badge ${c.vif < 5 ? "good" : c.vif < 10 ? "warn" : "bad"}">${c.vif.toFixed(2)} (${c.vif < 5 ? "Safe" : c.vif < 10 ? "Moderate" : "High"})</span>`;
-      const fmtEst = (v) => Math.abs(v) < 100 ? v.toFixed(4) : num(v, 4);
-      return `<tr><td><strong>${c.name}</strong>${c.name === "Intercept" ? " (β₀)" : ""}</td>
+      return `<tr><td><strong>${esc(c.name)}</strong>${c.name === "Intercept" ? " (β₀)" : ""}</td>
         <td class="num mono">${fmtEst(c.est)}</td><td class="num mono">${fmtEst(c.se)}</td><td class="num mono">${c.t.toFixed(3)}</td>
         <td class="num"><span class="badge ${sig ? "good" : "warn"}">${pfmt(c.p)} ${sig ? "✓" : "(n.s.)"}</span></td>
         <td class="num mono">[${fmtEst(c.ci[0])}, ${fmtEst(c.ci[1])}]</td><td class="num">${vif}</td></tr>`;
@@ -464,37 +486,47 @@
     $("coef-table").innerHTML = `<thead><tr><th>PREDICTOR</th><th class="num">ESTIMATE (β)</th><th class="num">STD. ERROR</th><th class="num">T-STAT</th><th class="num">P-VALUE</th><th class="num">95% CONF. INT</th><th class="num">VIF</th></tr></thead><tbody>${rows.join("")}</tbody>`;
   }
 
-  // ---- 即時預測 ----
-  const inputs = { "R&D Spend": ["in-rd", "r-rd", "v-rd"], "Marketing Spend": ["in-mk", "r-mk", "v-mk"], "Administration": ["in-ad", "r-ad", "v-ad"] };
-  for (const [num_, rng] of Object.values(inputs)) {
-    $(num_).addEventListener("input", () => { $(rng).value = $(num_).value; renderPredict(); });
-    $(rng).addEventListener("input", () => { $(num_).value = $(rng).value; renderPredict(); });
+  // ---- 即時預測（欄位依資料集動態產生）----
+  function buildPredictFields() {
+    const wrap = $("predict-fields");
+    wrap.innerHTML = ds().inputs.map((inp, i) => {
+      if (inp.type === "select") {
+        return `<div class="field"><label for="pf-${i}">${esc(inp.label)}</label>
+          <select id="pf-${i}" data-i="${i}">${inp.options.map((o, j) => `<option value="${j}">${esc(o.label)}</option>`).join("")}</select></div>`;
+      }
+      return `<div class="field"><label for="pf-${i}">${esc(inp.label)} <span id="pv-${i}"></span></label>
+        <input type="number" id="pf-${i}" data-i="${i}" min="${inp.min}" max="${inp.max}" step="${inp.step}" value="${inp.default}">
+        <input type="range" id="pr-${i}" data-i="${i}" min="${inp.min}" max="${inp.max}" step="${inp.step}" value="${inp.default}" aria-label="${esc(inp.label)} slider"></div>`;
+    }).join("");
+    wrap.querySelectorAll("input,select").forEach(el => el.addEventListener("input", (e) => {
+      const i = e.target.dataset.i, other = e.target.id.startsWith("pr-") ? $("pf-" + i) : $("pr-" + i);
+      if (other) other.value = e.target.value;
+      renderPredict();
+    }));
   }
-  $("in-state").addEventListener("change", renderPredict);
   function renderPredict() {
-    const r = result();
-    const x = {};
-    for (const [f, [id, , vid]] of Object.entries(inputs)) { x[f] = +$(id).value || 0; $(vid).textContent = money(x[f], 0); }
-    const st = $("in-state").value;
-    x["State_Florida"] = st === "Florida" ? 1 : 0;
-    x["State_New York"] = st === "New York" ? 1 : 0;
+    const r = result(), d = ds(), x = {};
+    d.inputs.forEach((inp, i) => {
+      if (inp.type === "select") Object.assign(x, inp.options[+$("pf-" + i).value].dummies);
+      else { x[inp.feature] = +$("pf-" + i).value || 0; $("pv-" + i).textContent = num(x[inp.feature], inp.step < 1 ? 3 : 0); }
+    });
     let total = r.coefs[0].est; const parts = [];
-    for (const c of r.coefs.slice(1)) { const v = c.est * x[c.name]; total += v; parts.push(`${short(c.name)}: ${v < 0 ? "−" : "+"}${money(Math.abs(v), 0)}`); }
+    for (const c of r.coefs.slice(1)) { const v = c.est * (x[c.name] ?? 0); total += v; parts.push(`${short(c.name)}: ${v < 0 ? "−" : "+"}${num(Math.abs(v), d.decimals)}`); }
     $("pred-value").textContent = money(total);
-    $("pred-breakdown").innerHTML = `Active predictors：${r.features.map(short).join("、")}<br>(Intercept ${money(r.coefs[0].est, 0)} | ${parts.join(" | ")})`;
+    $("pred-breakdown").innerHTML = `Active predictors：${r.features.map(short).join("、")}<br>(Intercept ${num(r.coefs[0].est, d.decimals)} | ${parts.join(" | ")})`;
   }
 
   // ---- 殘差表 ----
   function renderResiduals() {
-    const r = result();
+    const r = result(), d = ds();
     const rows = r.residuals.map((s, i) => {
       const high = Math.abs(s.resid) > r.rmse;
-      return `<tr><td>#${i + 1}</td><td>Startup #${s.id}</td><td class="num mono">${money(s.actual)}</td><td class="num mono">${money(s.pred)}</td>
+      return `<tr><td>#${i + 1}</td><td>${d.sample_label} #${s.id}</td><td class="num mono">${money(s.actual)}</td><td class="num mono">${money(s.pred)}</td>
         <td class="num mono ${s.resid >= 0 ? "pos" : "neg"}">${s.resid >= 0 ? "+" : "−"}${money(Math.abs(s.resid))}</td>
-        <td class="num mono">${money(Math.abs(s.resid))}</td><td class="num mono">${(Math.abs(s.resid) / s.actual * 100).toFixed(2)}%</td>
+        <td class="num mono">${money(Math.abs(s.resid))}</td><td class="num mono">${(Math.abs(s.resid) / Math.abs(s.actual) * 100).toFixed(2)}%</td>
         <td><span class="badge ${high ? "warn" : "good"}">● ${high ? "High Residual" : "In Range"}</span></td></tr>`;
     });
-    $("resid-table").innerHTML = `<thead><tr><th>RANK</th><th>SAMPLE ID</th><th class="num">ACTUAL PROFIT</th><th class="num">PREDICTED PROFIT</th><th class="num">RESIDUAL ($)</th><th class="num">ABS ERROR</th><th class="num">% ERROR</th><th>DIAGNOSTIC STATUS</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+    $("resid-table").innerHTML = `<thead><tr><th>RANK</th><th>SAMPLE ID</th><th class="num">ACTUAL ${esc(d.target)}</th><th class="num">PREDICTED</th><th class="num">RESIDUAL</th><th class="num">ABS ERROR</th><th class="num">% ERROR</th><th>DIAGNOSTIC STATUS</th></tr></thead><tbody>${rows.join("")}</tbody>`;
   }
 
   function render() {
@@ -502,9 +534,10 @@
     renderCompare(); renderEquation(); renderCoefs(); renderPredict(); renderResiduals();
   }
 
-  chartFor("rmse-chart", "rmse", "RMSE ($)", (v) => money(v, 0));
-  chartFor("r2-chart", "r2", "R-squared", (v) => (+v).toFixed(3));
-  render();
+  chartFor("rmse-chart", "rmse", "RMSE");
+  chartFor("r2-chart", "r2", "R-squared");
+  const initial = D.datasets.findIndex(d => "#" + d.id === location.hash);
+  selectDataset(initial >= 0 ? initial : 0);
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateCharts);
 })();
 </script>
