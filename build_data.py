@@ -186,6 +186,69 @@ datasets.append(analyze(X, y, {
     "feature_desc": desc,
 }))
 
+# ============ 3. Laptop Price ============
+print("Laptop Price")
+lp = pd.read_csv("laptop_data.csv", index_col=0)
+# --- 文字欄位 → 數值特徵（Feature Engineering）---
+feat = pd.DataFrame(index=lp.index)
+feat["Inches"] = lp["Inches"].astype(float)
+feat["Ram_GB"] = lp["Ram"].str.replace("GB", "").astype(int)
+feat["Weight_kg"] = lp["Weight"].str.replace("kg", "").astype(float)
+feat["Cpu_GHz"] = lp["Cpu"].str.extract(r"([\d.]+)GHz")[0].astype(float)
+feat["Cpu_i7"] = lp["Cpu"].str.contains("i7").astype(int)
+feat["Cpu_i5"] = lp["Cpu"].str.contains("i5").astype(int)
+
+def storage(mem, kind):
+    total = 0
+    for part in mem.split("+"):
+        part = part.strip()
+        is_ssd = ("SSD" in part) or ("Flash" in part)
+        if (kind == "SSD") != is_ssd:
+            continue
+        m = pd.Series([part]).str.extract(r"([\d.]+)\s*(GB|TB)").iloc[0]
+        if pd.notna(m[0]):
+            total += float(m[0]) * (1000 if m[1] == "TB" else 1)
+    return total
+feat["SSD_GB"] = lp["Memory"].apply(lambda s: storage(s, "SSD"))
+feat["HDD_GB"] = lp["Memory"].apply(lambda s: storage(s, "HDD"))
+
+res = lp["ScreenResolution"].str.extract(r"(\d+)x(\d+)").astype(float)
+feat["PPI"] = (np.sqrt(res[0] ** 2 + res[1] ** 2) / feat["Inches"]).round(1)
+feat["Touchscreen"] = lp["ScreenResolution"].str.contains("Touchscreen").astype(int)
+feat["IPS"] = lp["ScreenResolution"].str.contains("IPS").astype(int)
+gpu = lp["Gpu"].str.split().str[0]
+feat["Gpu_Nvidia"] = (gpu == "Nvidia").astype(int)
+feat["Gpu_AMD"] = (gpu == "AMD").astype(int)
+feat["Type_Gaming"] = (lp["TypeName"] == "Gaming").astype(int)
+feat["Company_Apple"] = (lp["Company"] == "Apple").astype(int)
+X, y = feat, lp["Price"].astype(float)
+assert X.shape[1] == 15 and X.isnull().sum().sum() == 0
+X.assign(Price=y).to_csv("laptop_features.csv", index=False)
+
+lap_desc = {"Inches": "螢幕尺寸（吋）", "Ram_GB": "記憶體容量（GB）", "Weight_kg": "重量（kg）",
+            "Cpu_GHz": "CPU 時脈（GHz，由 Cpu 字串解析）", "Cpu_i7": "CPU 為 Intel Core i7（1 = 是）",
+            "Cpu_i5": "CPU 為 Intel Core i5（1 = 是）", "SSD_GB": "SSD / Flash 容量（GB，由 Memory 解析）",
+            "HDD_GB": "HDD / Hybrid 容量（GB，由 Memory 解析）", "PPI": "每吋像素數 √(W²+H²)/Inches",
+            "Touchscreen": "觸控螢幕（1 = 是）", "IPS": "IPS 面板（1 = 是）",
+            "Gpu_Nvidia": "顯示卡為 Nvidia（1 = 是）", "Gpu_AMD": "顯示卡為 AMD（1 = 是，Intel 內顯為基準）",
+            "Type_Gaming": "筆電類型 = Gaming（1 = 是）", "Company_Apple": "品牌 = Apple（1 = 是）"}
+binary = [c for c in X.columns if set(X[c].unique()) <= {0, 1}]
+lap_inputs = numeric_inputs(X, [c for c in X.columns if c not in binary],
+                            {"Ram_GB": 1, "SSD_GB": 32, "HDD_GB": 250, "Inches": 0.1, "Weight_kg": 0.1, "Cpu_GHz": 0.1, "PPI": 1})
+for c in binary:
+    lap_inputs.append({"type": "select", "label": c, "options": [
+        {"label": f"{c}：否 (0)", "dummies": {c: 0}}, {"label": f"{c}：是 (1)", "dummies": {c: 1}}]})
+datasets.append(analyze(X, y, {
+    "id": "laptop", "name": "Laptop Price", "target": "Price", "unit_prefix": "₹", "unit_suffix": "",
+    "decimals": 0, "sample_label": "Laptop", "n_rows": int(len(lp)),
+    "title": "Laptop Price — Feature Selection Analysis",
+    "blurb": "預測筆記型電腦價格 <strong>Price</strong>（印度盧比）。原始 11 個欄位多為文字（Cpu、Memory、ScreenResolution、Gpu…），經特徵工程解析成 15 個數值 / 0-1 特徵；Exhaustive Search 枚舉全部 32,767 個子集。",
+    "source": "Kaggle Laptop Price Dataset（n = 1,303）",
+    "prep": "train_test_split(test_size=0.2, random_state=0)；文字欄位解析 + One-Hot（Intel 顯卡 / 非 Gaming / 非 Apple 為基準）",
+    "inputs": lap_inputs,
+    "feature_desc": lap_desc,
+}))
+
 out = {"datasets": datasets}
 with open("data.json", "w", encoding="utf-8") as fh:
     json.dump(out, fh, ensure_ascii=False, indent=1)
